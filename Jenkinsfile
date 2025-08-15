@@ -24,13 +24,13 @@ pipeline {
         stage('Deploy') {
             steps {
                 sh """
-                ssh -o StrictHostKeyChecking=no hoanghiep4298_shop@104.154.226.56 << 'ENDSSH'
-                cd ${APP_DIR}
-                git pull origin ${GIT_BRANCH}
-                npm install --production
-                npm run build
-                pm2 restart ${APP_NAME} || pm2 start dist/main.js --name ${APP_NAME}
-                ENDSSH
+                ssh -o StrictHostKeyChecking=no jenkins@104.154.226.56 \\
+                    "cd ${APP_DIR} && \\
+                    git pull origin ${GIT_BRANCH} && \\
+                    npm install --production && \\
+                    npm ci && \\
+                    npm run build && \\
+                    pm2 restart ${APP_NAME} || pm2 start dist/main.js --name ${APP_NAME}"
                 """
             }
         }
