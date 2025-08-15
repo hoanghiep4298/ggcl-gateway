@@ -24,7 +24,7 @@ pipeline {
         stage('Deploy') {
             steps {
                 sh """
-                ssh -o StrictHostKeyChecking=no user@104.154.226.56 << 'ENDSSH'
+                ssh -o StrictHostKeyChecking=hoanghiep4298_shop@104.154.226.56 << 'ENDSSH'
                 cd ${APP_DIR}
                 git pull origin ${GIT_BRANCH}
                 npm install --production
