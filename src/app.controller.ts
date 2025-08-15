@@ -11,6 +11,6 @@ export class AppController {
     const result = await firstValueFrom(
       this.client.send({ cmd: 'sum' }, [Number(a), Number(b)]),
     );
-    return { result: 'TEST CHANGE' };
+    return { result: 'TEST CHANGE 2' };
   }
 }
