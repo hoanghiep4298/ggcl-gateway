@@ -10,7 +10,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git branch: "${GIT_BRANCH}", url: 'git@github.com:your-username/ggcl-gateway.git'
+                git branch: "${GIT_BRANCH}", url: 'git@github.com:hoanghiep4298/ggcl-gateway.git'
             }
         }
 
@@ -24,7 +24,7 @@ pipeline {
         stage('Deploy') {
             steps {
                 sh """
-                ssh -o StrictHostKeyChecking=no user@your-vps-ip << 'ENDSSH'
+                ssh -o StrictHostKeyChecking=no user@104.154.226.56 << 'ENDSSH'
                 cd ${APP_DIR}
                 git pull origin ${GIT_BRANCH}
                 npm install --production
