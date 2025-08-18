@@ -24,7 +24,7 @@ pipeline {
         stage('Deploy') {
             steps {
                 sh """
-                ssh -o StrictHostKeyChecking=no jenkins@104.154.226.56 \\
+                ssh -o StrictHostKeyChecking=no jenkins@hoanghiep.publicvm.com \\
                     "cd ${APP_DIR} && \\
                     git pull origin ${GIT_BRANCH} && \\
                     npm install --production && \\
