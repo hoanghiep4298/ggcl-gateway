@@ -1,8 +1,14 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'node:20-alpine'
+            args '-v /var/run/docker.sock:/var/run/docker.sock'
+        }
+    }
 
     environment {
         REGISTRY = "docker.io"
+        DOCKERHUB_USER = credentials('dockerhub-cred') // DockerHub username/password đã lưu trong Jenkins
         IMAGE_NAME = "hoanghiep4298shop/ggcl-gateway"
     }
 
@@ -26,9 +32,10 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                script {
-                    dockerImage = docker.build("${IMAGE_NAME}:${BUILD_NUMBER}")
-                }
+                sh """
+                  echo "$DOCKERHUB_USER_PSW" | docker login -u "$DOCKERHUB_USER_USR" --password-stdin
+                  docker build -t $IMAGE_NAME:\$BUILD_NUMBER .
+                """
             }
         }
 
