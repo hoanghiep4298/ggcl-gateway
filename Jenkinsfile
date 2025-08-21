@@ -8,7 +8,7 @@ pipeline {
 
     environment {
         REGISTRY = "docker.io"
-        DOCKERHUB_USER = credentials('dockerhub-cred') // DockerHub username/password đã lưu trong Jenkins
+        DOCKERHUB_USER = credentials('docker-hub') // DockerHub username/password đã lưu trong Jenkins
         IMAGE_NAME = "hoanghiep4298shop/ggcl-gateway"
     }
 
@@ -55,7 +55,7 @@ pipeline {
             steps {
                 script {
                     def dockerImage = docker.build("${IMAGE_NAME}:${BUILD_NUMBER}")
-                    docker.withRegistry("https://${REGISTRY}", 'dockerhub-cred') {
+                    docker.withRegistry("https://${REGISTRY}", 'docker-hub') {
                         dockerImage.push("${BUILD_NUMBER}")
                         dockerImage.push("latest")
                     }
