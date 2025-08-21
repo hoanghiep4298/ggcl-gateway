@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         REGISTRY = "docker.io"
-        IMAGE_NAME = "hoanghiep4298shop/gateway"
+        IMAGE_NAME = "hoanghiep4298shop/ggcl-gateway"
     }
 
     stages {
@@ -14,6 +14,13 @@ pipeline {
                     branch: 'main',
                     credentialsId: 'github-ssh'
                 )
+            }
+        }
+
+        stage('Install & Build NestJS') {
+            steps {
+                sh 'npm install -f'
+                sh 'npm run build'
             }
         }
 
@@ -35,14 +42,30 @@ pipeline {
                 }
             }
         }
+
+        stage('Update Manifest') {
+            steps {
+                sh '''
+                  # update deployment.yaml with new tag
+                  sed -i "s#image: ${IMAGE_NAME}:.*#image: ${IMAGE_NAME}:${BUILD_NUMBER}#g" k8s/deployment.yaml
+
+                  # commit & push back to GitHub so ArgoCD detects change
+                  git config user.email "ci@jenkins"
+                  git config user.name "Jenkins CI"
+                  git add k8s/deployment.yaml
+                  git commit -m "Update image to ${IMAGE_NAME}:${BUILD_NUMBER}"
+                  git push origin main
+                '''
+            }
+        }
     }
 
     post {
         success {
-            echo "Docker image pushed: ${IMAGE_NAME}:${BUILD_NUMBER}"
+            echo "✅ CI/CD pipeline completed. Image pushed and manifest updated."
         }
         failure {
-            echo "Build failed!"
+            echo "❌ Pipeline failed!"
         }
     }
 }

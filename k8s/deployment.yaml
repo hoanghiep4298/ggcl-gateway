@@ -1,0 +1,6 @@
+spec:
+  containers:
+    - name: ggcl-gateway
+      image: hoanghiep4298shop/ggcl-gateway:latest
+      ports:
+        - containerPort: 3000
