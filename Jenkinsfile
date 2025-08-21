@@ -13,13 +13,11 @@ pipeline {
     }
 
     stages {
-        stage('Checkout') {
+stage('Checkout') {
             steps {
-                git(
-                    url: 'git@github.com:hoanghiep4298/ggcl-gateway.git',
-                    branch: 'main',
-                    credentialsId: 'github-ssh'
-                )
+                checkout([$class: 'GitSCM',
+                    branches: [[name: '*/main']],
+                    userRemoteConfigs: [[url: 'git@github.com:hoanghiep4298/ggcl-gateway.git']]])
             }
         }
 
