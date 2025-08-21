@@ -2,46 +2,47 @@ pipeline {
     agent any
 
     environment {
-        APP_NAME = "ggcl-gateway"
-        APP_DIR = "/srv/nest-app/ggcl-gateway"  // Thư mục trên VPS chứa app
-        GIT_BRANCH = "main"
+        REGISTRY = "docker.io"
+        IMAGE_NAME = "hoanghiep4298shop/gateway"
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git branch: "${GIT_BRANCH}", url: 'git@github.com:hoanghiep4298/ggcl-gateway.git'
+                git(
+                    url: 'git@github.com:hoanghiep4298/ggcl-gateway.git',
+                    branch: 'main',
+                    credentialsId: 'github-ssh'
+                )
             }
         }
 
-        stage('Build') {
+        stage('Build Docker Image') {
             steps {
-                sh 'npm install -f'
-                sh 'npm run build'
+                script {
+                    dockerImage = docker.build("${IMAGE_NAME}:${BUILD_NUMBER}")
+                }
             }
         }
 
-        stage('Deploy') {
+        stage('Push Docker Image') {
             steps {
-                sh """
-                ssh -o StrictHostKeyChecking=no jenkins@hoanghiep.publicvm.com \\
-                    "cd ${APP_DIR} && \\
-                    git pull origin ${GIT_BRANCH} && \\
-                    npm install --production && \\
-                    npm ci && \\
-                    npm run build && \\
-                    pm2 restart ${APP_NAME} || pm2 start dist/main.js --name ${APP_NAME}"
-                """
+                script {
+                    docker.withRegistry("https://${REGISTRY}", 'dockerhub-cred') {
+                        dockerImage.push("${BUILD_NUMBER}")
+                        dockerImage.push("latest")
+                    }
+                }
             }
         }
     }
 
     post {
-        failure {
-            echo "❌ Deploy failed for ${APP_NAME}"
-        }
         success {
-            echo "✅ Deploy success for ${APP_NAME}"
+            echo "Docker image pushed: ${IMAGE_NAME}:${BUILD_NUMBER}"
+        }
+        failure {
+            echo "Build failed!"
         }
     }
 }

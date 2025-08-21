@@ -8,8 +8,9 @@ export class AppController {
 
   @Get('sum')
   async sum(@Query('a') a: number, @Query('b') b: number) {
-    return await firstValueFrom(
-      this.client.send({ cmd: 'sum' }, [Number(a), Number(b)]),
-    );
+    return "HELLO TEST" + a + b;
+    // await firstValueFrom(
+    //   this.client.send({ cmd: 'sum' }, [Number(a), Number(b)]),
+    // );
   }
 }
