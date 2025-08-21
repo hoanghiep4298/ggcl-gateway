@@ -12,37 +12,32 @@ pipeline {
         IMAGE_NAME = "hoanghiep4298shop/ggcl-gateway"
     }
 
-    state("check environment") {
-        steps {
-            script {
-                sh 'pwd'
-                sh 'ls -la'
-                sh 'docker --version'
-                sh 'node --version'
-                sh 'npm --version'
+    stages {
+        stage('Check Environment') {
+            steps {
+                script {
+                    sh 'pwd'
+                    sh 'ls -la'
+                    sh 'docker --version'
+                    sh 'node --version'
+                    sh 'npm --version'
+                }
             }
         }
-    }
 
-    stage('Clean Workspace') {
-        steps {
-            cleanWs()
+        stage('Clean Workspace') {
+            steps {
+                cleanWs()
+            }
         }
-    }
 
-    stages {
-       
         stage('Clone Repository') {
             steps {
                 checkout([$class: 'GitSCM',
-                          branches: [[name: '*/main']], // Thay 'main' bằng nhánh bạn muốn
+                          branches: [[name: '*/main']],
                           userRemoteConfigs: [[url: 'git@github.com:hoanghiep4298/ggcl-gateway.git', credentialsId: 'github-ssh']]])
-            }
-        }
-
-        stage('Configure Git') {
-            steps {
-                sh 'git config remote.origin.url git@github.com:hoanghiep4298/ggcl-gateway.git'
+                sh 'ls -la'
+                sh 'git status'
             }
         }
 
@@ -56,8 +51,8 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 sh """
-                  echo "$DOCKERHUB_USER_PSW" | docker login -u "$DOCKERHUB_USER_USR" --password-stdin
-                  docker build -t $IMAGE_NAME:\$BUILD_NUMBER .
+                    echo "$DOCKERHUB_USER_PSW" | docker login -u "$DOCKERHUB_USER_USR" --password-stdin
+                    docker build -t $IMAGE_NAME:$BUILD_NUMBER .
                 """
             }
         }
@@ -65,6 +60,7 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 script {
+                    def dockerImage = docker.build("${IMAGE_NAME}:${BUILD_NUMBER}")
                     docker.withRegistry("https://${REGISTRY}", 'dockerhub-cred') {
                         dockerImage.push("${BUILD_NUMBER}")
                         dockerImage.push("latest")
@@ -75,17 +71,16 @@ pipeline {
 
         stage('Update Manifest') {
             steps {
-                sh '''
-                  # update deployment.yaml with new tag
-                  sed -i "s#image: ${IMAGE_NAME}:.*#image: ${IMAGE_NAME}:${BUILD_NUMBER}#g" k8s/deployment.yaml
-
-                  # commit & push back to GitHub so ArgoCD detects change
-                  git config user.email "ci@jenkins"
-                  git config user.name "Jenkins CI"
-                  git add k8s/deployment.yaml
-                  git commit -m "Update image to ${IMAGE_NAME}:${BUILD_NUMBER}"
-                  git push origin main
-                '''
+                dir(workspace) {
+                    sh '''
+                        sed -i "s#image: ${IMAGE_NAME}:.*#image: ${IMAGE_NAME}:${BUILD_NUMBER}#g" k8s/deployment.yaml
+                        git config user.email "ci@jenkins"
+                        git config user.name "Jenkins CI"
+                        git add k8s/deployment.yaml
+                        git commit -m "Update image to ${IMAGE_NAME}:${BUILD_NUMBER}"
+                        git push origin main
+                    '''
+                }
             }
         }
     }
