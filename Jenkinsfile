@@ -31,11 +31,18 @@ pipeline {
     }
 
     stages {
-        stage('Checkout') {
+       
+        stage('Clone Repository') {
             steps {
                 checkout([$class: 'GitSCM',
-                    branches: [[name: '*/main']],
-                    userRemoteConfigs: [[url: 'git@github.com:hoanghiep4298/ggcl-gateway.git']]])
+                          branches: [[name: '*/main']], // Thay 'main' bằng nhánh bạn muốn
+                          userRemoteConfigs: [[url: 'git@github.com:hoanghiep4298/ggcl-gateway.git', credentialsId: 'github-ssh']]])
+            }
+        }
+
+        stage('Configure Git') {
+            steps {
+                sh 'git config remote.origin.url git@github.com:hoanghiep4298/ggcl-gateway.git'
             }
         }
 
