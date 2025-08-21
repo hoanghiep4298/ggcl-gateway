@@ -11,7 +11,19 @@ pipeline {
         DOCKERHUB_USER = credentials('dockerhub-cred') // DockerHub username/password đã lưu trong Jenkins
         IMAGE_NAME = "hoanghiep4298shop/ggcl-gateway"
     }
-    
+
+    state("check environment") {
+        steps {
+            script {
+                sh 'pwd'
+                sh 'ls -la'
+                sh 'docker --version'
+                sh 'node --version'
+                sh 'npm --version'
+            }
+        }
+    }
+
     stage('Clean Workspace') {
         steps {
             cleanWs()
