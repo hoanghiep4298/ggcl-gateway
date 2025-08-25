@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         REGISTRY = "docker.io"
-        DOCKER_CREDS = credentials('dockerhub')  // ID của Jenkins credentials
+        DOCKER_CREDS = credentials('docker-hub')  // ID của Jenkins credentials
         IMAGE_NAME = "hoanghiep4298shop/gateway"
         BRANCH = "main"
         ARGOCMD = "/usr/local/bin/argocd"   // cần cài CLI vào Jenkins hoặc agent
