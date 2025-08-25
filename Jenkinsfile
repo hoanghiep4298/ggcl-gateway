@@ -1,90 +1,61 @@
 pipeline {
     agent {
         docker {
-            image 'node:20-alpine'
-            args '-v /var/run/docker.sock:/var/run/docker.sock'
+            // image có sẵn node + docker-cli (có thể tự build nếu cần)
+            image 'docker:20.10.16-dind' 
+            args '--privileged -v /var/run/docker.sock:/var/run/docker.sock'
         }
     }
 
     environment {
         REGISTRY = "docker.io"
-        DOCKERHUB_USER = credentials('docker-hub') // DockerHub username/password đã lưu trong Jenkins
-        IMAGE_NAME = "hoanghiep4298shop/ggcl-gateway"
+        DOCKER_CREDS = credentials('dockerhub')  // ID của Jenkins credentials
+        IMAGE_NAME = "hoanghiep4298shop/gateway"
+        BRANCH = "main"
+        ARGOCMD = "/usr/local/bin/argocd"   // cần cài CLI vào Jenkins hoặc agent
     }
 
     stages {
-        stage('Check Environment') {
+        stage('Checkout') {
             steps {
-                script {
-                    sh 'pwd'
-                    sh 'ls -la'
-                    sh 'docker --version'
-                    sh 'node --version'
-                    sh 'npm --version'
+                git branch: "${BRANCH}", url: 'git@github.com:hoanghiep4298/ggcl-gateway.git', credentialsId: 'github-ssh'
+            }
+        }
+
+        stage('Install & Build') {
+            agent {
+                docker {
+                    image 'node:20'
+                    args '-v /var/run/docker.sock:/var/run/docker.sock'
                 }
             }
-        }
-
-        stage('Clone Repository') {
             steps {
-                checkout([$class: 'GitSCM',
-                          branches: [[name: '*/main']],
-                          userRemoteConfigs: [[url: 'git@github.com:hoanghiep4298/ggcl-gateway.git', credentialsId: 'github-ssh']]])
-                sh 'ls -la'
-                sh 'git status'
-            }
-        }
-
-        stage('Install & Build NestJS') {
-            steps {
-                sh 'npm install -f'
+                sh 'npm install'
                 sh 'npm run build'
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Docker Build') {
             steps {
-                sh """
-                    echo "$DOCKERHUB_USER_PSW" | docker login -u "$DOCKERHUB_USER_USR" --password-stdin
-                    docker build -t $IMAGE_NAME:$BUILD_NUMBER .
-                """
+                sh "echo ${DOCKER_CREDS_PSW} | docker login -u ${DOCKER_CREDS_USR} --password-stdin"
+                sh "docker build -t ${IMAGE_NAME}:${BUILD_NUMBER} ."
+                sh "docker push ${IMAGE_NAME}:${BUILD_NUMBER}"
+                sh "docker tag ${IMAGE_NAME}:${BUILD_NUMBER} ${IMAGE_NAME}:latest"
+                sh "docker push ${IMAGE_NAME}:latest"
             }
         }
 
-        stage('Push Docker Image') {
-            steps {
-                script {
-                    def dockerImage = docker.build("${IMAGE_NAME}:${BUILD_NUMBER}")
-                    docker.withRegistry("https://${REGISTRY}", 'docker-hub') {
-                        dockerImage.push("${BUILD_NUMBER}")
-                        dockerImage.push("latest")
-                    }
-                }
-            }
-        }
+        // stage('ArgoCD Deploy') {
+        //     steps {
+        //         // Cách 1: trigger ArgoCD CLI
+        //         sh "${ARGOCMD} login argocd-server --username admin --password $ARGOCD_PASS --insecure"
+        //         sh "${ARGOCMD} app set my-nestjs-app --revision ${IMAGE_NAME}:${BUILD_NUMBER}"
+        //         sh "${ARGOCMD} app sync my-nestjs-app"
 
-        stage('Update Manifest') {
-            steps {
-                dir(workspace) {
-                    sh '''
-                        sed -i "s#image: ${IMAGE_NAME}:.*#image: ${IMAGE_NAME}:${BUILD_NUMBER}#g" k8s/deployment.yaml
-                        git config user.email "ci@jenkins"
-                        git config user.name "Jenkins CI"
-                        git add k8s/deployment.yaml
-                        git commit -m "Update image to ${IMAGE_NAME}:${BUILD_NUMBER}"
-                        git push origin main
-                    '''
-                }
-            }
-        }
-    }
-
-    post {
-        success {
-            echo "✅ CI/CD pipeline completed. Image pushed and manifest updated."
-        }
-        failure {
-            echo "❌ Pipeline failed!"
-        }
+        //         // Cách 2: gọi API ArgoCD (REST) nếu không dùng CLI
+        //         // sh "curl -k -H \"Authorization: Bearer $ARGOCD_TOKEN\" -X POST https://argocd-server/api/v1/applications/my-nestjs-app/sync"
+        //     }
+        // }
     }
 }
+
