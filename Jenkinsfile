@@ -1,12 +1,4 @@
 pipeline {
-    agent {
-        docker {
-            // image có sẵn node + docker-cli (có thể tự build nếu cần)
-            image 'docker:20.10.16-dind' 
-            args '--privileged -v /var/run/docker.sock:/var/run/docker.sock'
-        }
-    }
-
     environment {
         REGISTRY = "docker.io"
         DOCKER_CREDS = credentials('dockerhub')  // ID của Jenkins credentials
@@ -23,12 +15,6 @@ pipeline {
         }
 
         stage('Install & Build') {
-            agent {
-                docker {
-                    image 'node:20'
-                    args '-v /var/run/docker.sock:/var/run/docker.sock'
-                }
-            }
             steps {
                 sh 'npm install'
                 sh 'npm run build'
