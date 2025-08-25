@@ -1,4 +1,6 @@
 pipeline {
+    agent any
+
     environment {
         REGISTRY = "docker.io"
         DOCKER_CREDS = credentials('dockerhub')  // ID của Jenkins credentials
