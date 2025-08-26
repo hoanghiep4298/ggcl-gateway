@@ -26,10 +26,10 @@ pipeline {
         stage('Docker Build') {
             steps {
                 sh "echo ${DOCKER_CREDS_PSW} | docker login -u ${DOCKER_CREDS_USR} --password-stdin"
-                sh "docker build -t ${IMAGE_NAME}:${BUILD_NUMBER} ."
-                sh "docker push ${IMAGE_NAME}:${BUILD_NUMBER}"
-                sh "docker tag ${IMAGE_NAME}:${BUILD_NUMBER} ${IMAGE_NAME}:latest"
-                sh "docker push ${IMAGE_NAME}:latest"
+                sh "sudo docker build -t ${IMAGE_NAME}:${BUILD_NUMBER} ."
+                sh "sudo docker push ${IMAGE_NAME}:${BUILD_NUMBER}"
+                sh "sudo docker tag ${IMAGE_NAME}:${BUILD_NUMBER} ${IMAGE_NAME}:latest"
+                sh "sudo docker push ${IMAGE_NAME}:latest"
             }
         }
 
