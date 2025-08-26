@@ -18,14 +18,15 @@ pipeline {
 
         stage('Install & Build') {
             steps {
-                sh 'npm install'
+                sh 'npm install -f'
                 sh 'npm run build'
             }
         }
 
         stage('Docker Build') {
             steps {
-                sh "echo ${DOCKER_CREDS_PSW} | docker login -u ${DOCKER_CREDS_USR} --password-stdin"
+                sh "whoami"
+                sh "echo ${DOCKER_CREDS_PSW} | sudo docker login -u ${DOCKER_CREDS_USR} --password-stdin"
                 sh "sudo docker build -t ${IMAGE_NAME}:${BUILD_NUMBER} ."
                 sh "sudo docker push ${IMAGE_NAME}:${BUILD_NUMBER}"
                 sh "sudo docker tag ${IMAGE_NAME}:${BUILD_NUMBER} ${IMAGE_NAME}:latest"
