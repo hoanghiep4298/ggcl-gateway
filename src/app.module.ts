@@ -9,7 +9,7 @@ import { AppService } from './app.service';
       {
         name: 'MATH_SERVICE',
         transport: Transport.TCP,
-        options: { host: 'ggcl-math-service', port: 4000 },
+        options: { host: 'ggcl-math-service', port: 8800 },
       },
     ]),
   ],
