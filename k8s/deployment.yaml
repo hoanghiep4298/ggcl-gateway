@@ -18,6 +18,19 @@ spec:
           imagePullPolicy: Always
           ports:
             - containerPort: 3000
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+          envFrom:
+            - configMapRef:
+                name: ggcl-gateway-config
+            - secretRef:
+                name: ggcl-gateway-secrets
+
 ---
 apiVersion: v1
 kind: Service
@@ -31,3 +44,23 @@ spec:
     - port: 3000
       targetPort: 3000
       nodePort: 30080
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ggcl-gateway-config
+data:
+  NODE_ENV: "production"
+  APP_PORT: "3000"
+  API_URL: "https://api.example.com"
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ggcl-gateway-secrets
+type: Opaque
+data:
+  DATABASE_URL: bXlzcWw6Ly91c2VyOnBhc3NAZGI6MzMwNg==
+  JWT_SECRET: c29tZXNlY3JldGtleQ==
+

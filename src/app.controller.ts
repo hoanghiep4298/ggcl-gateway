@@ -8,7 +8,12 @@ export class AppController {
 
   @Get('sum')
   async sum(@Query('a') a: number, @Query('b') b: number) {
-    return  await firstValueFrom(
+    console.log(
+      'Test env PORT, SECRET',
+      process.env.APP_PORT,
+      process.env.JWT_SECRET,
+    );
+    return await firstValueFrom(
       this.client.send({ cmd: 'sum' }, [Number(a), Number(b)]),
     );
   }
