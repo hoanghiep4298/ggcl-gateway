@@ -7,9 +7,17 @@ import { AppService } from './app.service';
   imports: [
     ClientsModule.register([
       {
-        name: 'MATH_SERVICE',
-        transport: Transport.TCP,
-        options: { host: 'ggcl-math-service', port: 8800 },
+        name: 'KAFKA_SERVICE',
+        transport: Transport.KAFKA,
+        options: {
+          client: {
+            clientId: 'gateway',
+            brokers: ['kafka:9094'],
+          },
+          consumer: {
+            groupId: 'gateway-consumer-' + Math.random(),
+          },
+        },
       },
     ]),
   ],
