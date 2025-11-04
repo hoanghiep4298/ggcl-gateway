@@ -19,4 +19,9 @@ export class AppController {
     // console.log('data', data);
     // return data?.total || 0;
   }
+
+  @Get()
+  getHello(): string {
+    return 'Hello World!';
+  }
 }
